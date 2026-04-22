@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>EcoTrack — SDG 12</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --g1:#0a3d1f;--g2:#145a32;--g3:#1e8449;--g4:#27ae60;--g5:#2ecc71;
+  --gold:#f0b429;--amber:#e67e22;--red:#e74c3c;--blue:#3498db;
+  --bg:#061a0f;--bg2:#0d2818;--bg3:#112e1c;--surface:#142b1a;--surface2:#1a3522;
+  --text:#e8f5e9;--text2:#a5d6a7;--text3:#66bb6a;--muted:#4a7c52;
+  --border:#1e4d28;--border2:#265e32;
+  --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+  --r:14px;--r2:20px;--transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* PARTICLES */
+#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+.particle{position:absolute;width:3px;height:3px;background:var(--g5);border-radius:50%;opacity:0;animation:float linear infinite}
+@keyframes float{0%{transform:translateY(100vh) translateX(0);opacity:0}10%{opacity:.6}90%{opacity:.3}100%{transform:translateY(-20px) translateX(40px);opacity:0}}
+
+/* APP SHELL */
+.app{max-width:430px;margin:0 auto;min-height:100vh;position:relative;z-index:1;display:flex;flex-direction:column}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;min-height:100vh;animation:slideIn .35s cubic-bezier(.4,0,.2,1)}
+.screen.active{display:flex}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideBack{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.screen.back-anim{animation:slideBack .35s cubic-bezier(.4,0,.2,1)}
+
+/* TOPBAR */
+.topbar{background:linear-gradient(135deg,var(--g1),var(--g2));padding:16px 18px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.topbar-logo{font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--g5);letter-spacing:-0.5px;display:flex;align-items:center;gap:8px}
+.topbar-logo span{font-size:22px}
+.topbar-title{font-family:var(--font-head);font-size:17px;font-weight:700;color:var(--text);flex:1;text-align:center}
+.topbar-back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:22px;border-radius:10px;transition:var(--transition);background:rgba(255,255,255,.06)}
+.topbar-back:hover{background:rgba(255,255,255,.12);color:var(--text)}
+.topbar-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border-radius:10px;background:rgba(255,255,255,.06);transition:var(--transition);color:var(--text2)}
+.topbar-icon:hover{background:rgba(46,204,113,.15);color:var(--g5)}
+
+/* BOTTOM NAV */
+.bottomnav{background:var(--bg2);border-top:1px solid var(--border);display:flex;padding:6px 4px 12px;position:sticky;bottom:0;z-index:100}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border-radius:12px;transition:var(--transition);border:none;background:none;color:var(--muted);font-family:var(--font-body);font-size:10px;font-weight:500}
+.bnav-btn svg{width:20px;height:20px;transition:var(--transition)}
+.bnav-btn.active{color:var(--g5)}
+.bnav-btn.active svg{filter:drop-shadow(0 0 6px var(--g5))}
+.bnav-btn:hover{color:var(--text2);background:rgba(46,204,113,.07)}
+
+/* CONTENT */
+.content{flex:1;padding:16px;overflow-y:auto;padding-bottom:8px}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-track{background:transparent}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* SCORE HERO (HOME) */
+.score-hero{background:linear-gradient(135deg,var(--g2),var(--g3));border-radius:var(--r2);padding:22px 20px;margin-bottom:14px;position:relative;overflow:hidden;border:1px solid var(--border2)}
+.score-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:rgba(46,204,113,.12);border-radius:50%}
+.score-hero::after{content:'';position:absolute;bottom:-30px;left:-20px;width:100px;height:100px;background:rgba(255,255,255,.04);border-radius:50%}
+.score-hero-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.score-hero-val{font-family:var(--font-head);font-size:48px;font-weight:800;color:#fff;line-height:1;margin-bottom:4px}
+.score-hero-val span{font-size:18px;font-weight:400;color:rgba(255,255,255,.7);margin-left:4px}
+.score-hero-sub{font-size:13px;color:rgba(255,255,255,.65)}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.stat-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 10px;text-align:center;transition:var(--transition);cursor:default}
+.stat-mini:hover{border-color:var(--border2);background:var(--surface2)}
+.stat-mini-icon{font-size:18px;margin-bottom:4px}
+.stat-mini-val{font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--g5);line-height:1}
+.stat-mini-label{font-size:10px;color:var(--muted);margin-top:3px}
+
+/* LEVEL CARD */
+.level-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;transition:var(--transition)}
+.level-card:hover{border-color:var(--border2);background:var(--surface2)}
+.level-badge{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--g3),var(--g5));display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;box-shadow:0 4px 16px rgba(46,204,113,.3)}
+.level-info-label{font-size:11px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px}
+.level-info-name{font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px}
+.progress-bar{height:5px;background:var(--bg);border-radius:99px;overflow:hidden;flex:1}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--g4),var(--g5));border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* QUICK ACTIONS */
+.section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:16px 0 10px}
+.quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.qa-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:var(--transition);font-family:var(--font-body)}
+.qa-btn:hover{border-color:var(--g4);background:var(--surface2);transform:translateY(-2px)}
+.qa-btn:active{transform:scale(.95)}
+.qa-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.qa-label{font-size:10px;color:var(--text2);font-weight:500;text-align:center;line-height:1.3}
+
+/* TIP STRIP */
+.tip-strip{background:linear-gradient(135deg,rgba(30,132,73,.2),rgba(39,174,96,.1));border:1px solid rgba(46,204,113,.2);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--text2);margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+.tip-strip-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.tip-strip b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--g5);margin-bottom:3px}
+
+/* FORM ELEMENTS */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+input[type=text],input[type=number],input[type=email],select,textarea{
+  width:100%;padding:12px 14px;border:1px solid var(--border2);border-radius:var(--r);
+  font-size:14px;background:var(--surface);color:var(--text);outline:none;
+  font-family:var(--font-body);transition:var(--transition)
+}
+input:focus,select:focus,textarea:focus{border-color:var(--g4);box-shadow:0 0 0 3px rgba(46,204,113,.12);background:var(--surface2)}
+select option{background:var(--bg2)}
+textarea{resize:vertical;min-height:80px}
+
+/* BUTTONS */
+.btn-primary{background:linear-gradient(135deg,var(--g3),var(--g5));color:#fff;border:none;border-radius:var(--r);padding:14px;width:100%;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font-head);letter-spacing:.3px;transition:var(--transition);position:relative;overflow:hidden}
+.btn-primary::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,.15);border-radius:50%;transform:translate(-50%,-50%);transition:width .4s,height .4s}
+.btn-primary:active::after{width:200px;height:200px}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(46,204,113,.35)}
+.btn-primary:active{transform:translateY(0)}
+
+/* TOAST */
+.toast{background:linear-gradient(135deg,var(--g2),var(--g3));border:1px solid var(--g4);border-radius:var(--r);padding:12px 16px;font-size:13px;color:#fff;margin-bottom:12px;font-weight:500;display:none;animation:toastIn .4s cubic-bezier(.4,0,.2,1)}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:12px;transition:var(--transition)}
+.card:hover{border-color:var(--border2);background:var(--surface2)}
+
+/* PRODUCT CARDS */
+.product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;transition:var(--transition)}
+.product-card:hover{border-color:var(--g4);background:var(--surface2);transform:translateX(3px)}
+.product-icon{width:54px;height:54px;background:linear-gradient(135deg,var(--g1),var(--g2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;border:1px solid var(--border2)}
+.product-info h4{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px}
+.product-price{font-size:15px;font-weight:700;color:var(--g5);margin-bottom:2px}
+.product-tag{font-size:11px;color:var(--muted)}
+.buy-btn{margin-left:auto;background:linear-gradient(135deg,var(--g3),var(--g5));color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:var(--font-head);transition:var(--transition)}
+.buy-btn:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(46,204,113,.35)}
+
+/* ENTRIES */
+.entry-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;transition:var(--transition);animation:fadeUp .3s ease both}
+.entry-card:hover{border-color:var(--border2);background:var(--surface2)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.entry-info-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.entry-info-meta{font-size:11px;color:var(--muted)}
+.pts-pill{background:linear-gradient(135deg,rgba(240,180,41,.2),rgba(230,126,34,.15));border:1px solid rgba(240,180,41,.3);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap}
+
+/* DONATE ENTRY */
+.donate-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;animation:fadeUp .3s ease both}
+.donate-card:hover{border-color:var(--border2)}
+.donate-card h4{font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px}
+.donate-card p{font-size:12px;color:var(--muted)}
+.cond-badge{display:inline-block;font-size:10px;padding:2px 9px;border-radius:99px;font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+.cond-good{background:rgba(46,204,113,.15);color:var(--g5);border:1px solid rgba(46,204,113,.25)}
+.cond-fair{background:rgba(240,180,41,.12);color:var(--gold);border:1px solid rgba(240,180,41,.25)}
+.cond-poor{background:rgba(231,76,60,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.2)}
+
+/* PHOTO UPLOAD */
+.photo-upload{background:var(--surface);border:2px dashed var(--border2);border-radius:var(--r2);height:130px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:16px;flex-direction:column;gap:8px;transition:var(--transition)}
+.photo-upload:hover{border-color:var(--g4);background:var(--surface2)}
+.photo-upload-icon{font-size:32px}
+.photo-upload span{font-size:13px;color:var(--muted)}
+
+/* IMPACT STATS */
+.impact-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;transition:var(--transition)}
+.impact-stat:hover{border-color:var(--border2);background:var(--surface2);transform:translateX(3px)}
+.impact-stat-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.impact-stat-val{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--text);line-height:1}
+.impact-stat-label{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ECO SCORE CIRCLE */
+.eco-score-wrap{display:flex;flex-direction:column;align-items:center;padding:20px 0}
+.eco-score-ring{position:relative;width:150px;height:150px}
+.eco-score-ring svg{width:150px;height:150px;transform:rotate(-90deg)}
+.eco-score-ring circle{fill:none;stroke-width:10;stroke-linecap:round}
+.ring-bg{stroke:var(--surface2)}
+.ring-fill{stroke:var(--g5);stroke-dasharray:408;stroke-dashoffset:408;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);filter:drop-shadow(0 0 8px var(--g5))}
+.eco-score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.eco-score-num{font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--g5)}
+.eco-score-denom{font-size:12px;color:var(--muted)}
+.eco-level-name{font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--text);margin-top:12px}
+.eco-level-desc{font-size:12px;color:var(--muted);margin-top:3px;text-align:center}
+
+/* REWARDS */
+.reward-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--surface);border-radius:var(--r);padding:4px}
+.reward-tab{flex:1;padding:8px;border:none;background:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);font-family:var(--font-body);transition:var(--transition)}
+.reward-tab.active{background:linear-gradient(135deg,var(--g3),var(--g5));color:#fff}
+.reward-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;transition:var(--transition)}
+.reward-card:hover{border-color:var(--border2);background:var(--surface2)}
+.reward-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.reward-info h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px}
+.reward-info p{font-size:12px;color:var(--muted)}
+.reward-pts{font-size:13px;font-weight:700;color:var(--gold);margin-top:3px}
+.redeem-btn{margin-left:auto;background:transparent;border:1px solid var(--border2);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;color:var(--text2);flex-shrink:0;font-family:var(--font-body);transition:var(--transition)}
+.redeem-btn:hover{border-color:var(--g4);color:var(--g5);background:rgba(46,204,113,.08)}
+.pts-header{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:14px}
+.pts-header-val{font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--gold)}
+.pts-header-label{font-size:12px;color:var(--muted)}
+
+/* LEADERBOARD */
+.lb-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--surface);border-radius:var(--r);padding:4px}
+.lb-tab{flex:1;padding:8px;border:none;background:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);font-family:var(--font-body);transition:var(--transition)}
+.lb-tab.active{background:linear-gradient(135deg,var(--g3),var(--g5));color:#fff}
+.lb-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;transition:var(--transition);animation:fadeUp .4s ease both}
+.lb-entry:hover{border-color:var(--border2);background:var(--surface2)}
+.lb-entry.me{border-color:var(--g4);background:linear-gradient(135deg,rgba(30,132,73,.15),rgba(39,174,96,.08))}
+.lb-rank{font-family:var(--font-head);font-size:20px;font-weight:800;width:32px;text-align:center;flex-shrink:0}
+.lb-rank.gold{color:#f0b429}
+.lb-rank.silver{color:#bdc3c7}
+.lb-rank.bronze{color:#cd7f32}
+.lb-rank.other{color:var(--muted)}
+.lb-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--g2),var(--g3));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;border:2px solid var(--border2);font-family:var(--font-head)}
+.lb-name{font-size:14px;font-weight:600;color:var(--text)}
+.lb-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.lb-pts{margin-left:auto;font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--gold)}
+
+/* QR SCANNER */
+.qr-frame{margin:20px auto;width:220px;height:220px;border-radius:20px;background:var(--surface2);display:flex;align-items:center;justify-content:center;position:relative;border:2px solid var(--border2)}
+.qr-corner{position:absolute;width:28px;height:28px;border-color:var(--g5);border-style:solid;border-width:0}
+.qr-corner.tl{top:12px;left:12px;border-top-width:3px;border-left-width:3px;border-radius:4px 0 0 0}
+.qr-corner.tr{top:12px;right:12px;border-top-width:3px;border-right-width:3px;border-radius:0 4px 0 0}
+.qr-corner.bl{bottom:12px;left:12px;border-bottom-width:3px;border-left-width:3px;border-radius:0 0 0 4px}
+.qr-corner.br{bottom:12px;right:12px;border-bottom-width:3px;border-right-width:3px;border-radius:0 0 4px 0}
+.qr-scan-line{position:absolute;left:20px;right:20px;height:2px;background:linear-gradient(90deg,transparent,var(--g5),transparent);animation:scan 2s linear infinite;box-shadow:0 0 8px var(--g5)}
+@keyframes scan{0%{top:20px}100%{top:180px}}
+.qr-icon{font-size:60px;opacity:.3}
+.qr-examples{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.qr-ex-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;transition:var(--transition)}
+.qr-ex-card:hover{border-color:var(--g4);background:var(--surface2);transform:translateY(-2px)}
+.qr-ex-icon{font-size:28px;margin-bottom:6px}
+.qr-ex-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.qr-ex-sub{font-size:11px;color:var(--muted)}
+.coming-soon-badge{display:inline-block;background:rgba(52,152,219,.15);border:1px solid rgba(52,152,219,.3);color:#3498db;border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px}
+
+/* CONTACT PAGE */
+.contact-hero{text-align:center;padding:24px 16px 20px}
+.contact-avatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--g2),var(--g5));margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:40px;border:3px solid var(--border2);box-shadow:0 0 0 6px rgba(46,204,113,.12)}
+.contact-name{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.contact-role{font-size:13px;color:var(--muted)}
+.contact-links{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.contact-link{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:var(--transition);cursor:pointer;text-decoration:none}
+.contact-link:hover{border-color:var(--g4);background:var(--surface2);transform:translateX(4px)}
+.contact-link-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.contact-link-label{font-size:11px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px}
+.contact-link-val{font-size:14px;font-weight:600;color:var(--text)}
+.contact-arrow{margin-left:auto;color:var(--muted);font-size:18px}
+.sdg-banner{background:linear-gradient(135deg,var(--g1),var(--g2));border:1px solid var(--border2);border-radius:var(--r2);padding:16px;margin-top:16px;text-align:center}
+.sdg-banner-icon{font-size:32px;margin-bottom:8px}
+.sdg-banner-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--g5);margin-bottom:4px}
+.sdg-banner-desc{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:32px 16px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:10px;opacity:.4}
+.empty-text{font-size:14px}
+
+/* NOTIFICATION DOT */
+.notif-dot{width:8px;height:8px;background:var(--red);border-radius:50%;position:absolute;top:8px;right:10px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+
+/* SCROLLBAR SEARCH */
+.search-bar{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.search-bar input{border:none;outline:none;font-size:14px;flex:1;background:transparent;color:var(--text);font-family:var(--font-body)}
+.search-bar input::placeholder{color:var(--muted)}
+
+/* PULSE LOADER */
+.loader{display:flex;justify-content:center;gap:6px;padding:16px}
+.loader-dot{width:8px;height:8px;border-radius:50%;background:var(--g4);animation:bounce .8s ease infinite both}
+.loader-dot:nth-child(2){animation-delay:.16s}
+.loader-dot:nth-child(3){animation-delay:.32s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<div id="particles"></div>
+
+<div class="app">
+
+<!-- ===== HOME ===== -->
+<div id="s-home" class="screen active">
+  <div class="topbar">
+    <div class="topbar-logo"><span>🌿</span> EcoTrack</div>
+    <div style="display:flex;gap:8px">
+      <div class="topbar-icon" onclick="go('contact')" title="Contact">👤</div>
+      <div class="topbar-icon" style="position:relative">🔔<div class="notif-dot"></div></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="score-hero">
+      <div class="score-hero-label">Total Eco Score</div>
+      <div class="score-hero-val" id="h-score">0 <span>pts</span></div>
+      <div class="score-hero-sub">Keep logging to level up! 🚀</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="stat-mini-icon">🌿</div>
+        <div class="stat-mini-val" id="h-waste">0</div>
+        <div class="stat-mini-label">kg Reduced</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon">☁️</div>
+        <div class="stat-mini-val" id="h-co2">0</div>
+        <div class="stat-mini-label">CO₂ Saved</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-icon">🎁</div>
+        <div class="stat-mini-val" id="h-donated">0</div>
+        <div class="stat-mini-label">Donated</div>
+      </div>
+    </div>
+    <div class="level-card">
+      <div class="level-badge" id="h-level-icon">🌱</div>
+      <div style="flex:1">
+        <div class="level-info-label">Your Level</div>
+        <div class="level-info-name" id="h-level-name">Newcomer</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="progress-bar" style="flex:1"><div class="progress-fill" id="h-progress" style="width:0%"></div></div>
+          <div style="font-size:11px;color:var(--muted)" id="h-progress-label">0%</div>
+        </div>
+      </div>
+    </div>
+    <div class="tip-strip">
+      <div class="tip-strip-icon">💡</div>
+      <div><b>Tip of the day</b><span id="home-tip"></span></div>
+    </div>
+    <div class="section-title">Quick actions</div>
+    <div class="quick-actions">
+      <div class="qa-btn" onclick="go('tracker')">
+        <div class="qa-icon" style="background:linear-gradient(135deg,#0a3d1f,#1e8449)">♻️</div>
+        <div class="qa-label">Track Waste</div>
+      </div>
+      <div class="qa-btn" onclick="go('donate')">
+        <div class="qa-icon" style="background:linear-gradient(135deg,#3d0a1a,#c0392b)">🎁</div>
+        <div class="qa-label">Donate Items</div>
+      </div>
+      <div class="qa-btn" onclick="go('shop')">
+        <div class="qa-icon" style="background:linear-gradient(135deg,#0a2c3d,#1a6e8e)">🛒</div>
+        <div class="qa-label">Eco Shop</div>
+      </div>
+      <div class="qa-btn" onclick="go('impact')">
+        <div class="qa-icon" style="background:linear-gradient(135deg,#3d300a,#b07d14)">📊</div>
+        <div class="qa-label">My Impact</div>
+      </div>
+    </div>
+  </div>
+  <div class="bottomnav" id="bn-home"></div>
+</div>
+
+<!-- ===== TRACKER ===== -->
+<div id="s-tracker" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="go('home','back')">‹</div>
+    <div class="topbar-title">Waste Tracker</div>
+    <div class="topbar-icon">🔔</div>
+  </div>
+  <div class="content">
+    <div id="tracker-toast" class="toast">✅ Entry saved! You earned points.</div>
+    <div class="tip-strip" style="margin-bottom:16px">
+      <div class="tip-strip-icon">♻️</div>
+      <div><b>Why track?</b>Awareness is the first step. Every gram you log helps reduce global food waste of 1.3 billion tonnes/year.</div>
+    </div>
+    <div class="card">
+      <div class="field"><label>Wasted item name</label>
+        <input type="text" id="w-item" placeholder="e.g. Rice, Plastic bottle, Paper..."/></div>
+      <div class="field"><label>Quantity (kg)</label>
+        <input type="number" id="w-qty" placeholder="e.g. 0.5" min="0" step="0.1"/></div>
+      <div class="field"><label>Reason for waste</label>
+        <select id="w-reason">
+          <option value="">Select Reason</option>
+          <option>Expired</option>
+          <option>Extra / Overcooked</option>
+          <option>Spoiled</option>
+          <option>Other</option>
+        </select></div>
+      <div id="pts-preview" style="display:none;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.2);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--g5);font-weight:600"></div>
+      <button class="btn-primary" onclick="saveWaste()">Submit Entry</button>
+    </div>
+    <div class="section-title">Past entries</div>
+    <div id="waste-list"></div>
+  </div>
+  <div class="bottomnav" id="bn-tracker"></div>
+</div>
+
+<!-- ===== SHOP ===== -->
+<div id="s-shop" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="go('home','back')">‹</div>
+    <div class="topbar-title">Eco Shop</div>
+    <div class="topbar-icon">🛒</div>
+  </div>
+  <div class="content">
+    <div id="shop-toast" class="toast"></div>
+    <div class="search-bar">
+      <span style="font-size:16px;color:var(--muted)">🔍</span>
+      <input type="text" placeholder="Search eco products..." id="shop-search" oninput="filterShop()"/>
+    </div>
+    <div class="section-title">Recommended for you</div>
+    <div id="shop-list"></div>
+    <p style="text-align:center;color:var(--muted);font-size:12px;margin-top:8px;padding:8px">More eco products coming soon... 🌱</p>
+  </div>
+  <div class="bottomnav" id="bn-shop"></div>
+</div>
+
+<!-- ===== DONATE ===== -->
+<div id="s-donate" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="go('home','back')">‹</div>
+    <div class="topbar-title">Donate Items</div>
+    <div class="topbar-icon">🔔</div>
+  </div>
+  <div class="content">
+    <div id="donate-toast" class="toast">🎁 Donation posted! Thank you.</div>
+    <div class="photo-upload" onclick="alert('In the real app, this opens your camera or gallery!')">
+      <div class="photo-upload-icon">📷</div>
+      <span>Tap to upload item photo</span>
+    </div>
+    <div class="card">
+      <div class="field"><label>Item name</label>
+        <input type="text" id="d-name" placeholder="e.g. Old textbooks, Jacket, Chair..."/></div>
+      <div class="field"><label>Condition</label>
+        <select id="d-condition"><option>Good</option><option>Fair</option><option>Poor</option></select></div>
+      <div class="field"><label>Description (optional)</label>
+        <textarea id="d-desc" placeholder="Share any details — size, brand, reason for donating..."></textarea></div>
+      <button class="btn-primary" onclick="postDonation()">Post Donation</button>
+    </div>
+    <div class="section-title">Your donations</div>
+    <div id="donate-list"></div>
+  </div>
+  <div class="bottomnav" id="bn-donate"></div>
+</div>
+
+<!-- ===== IMPACT ===== -->
+<div id="s-impact" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo"><span>📊</span> My Impact</div>
+    <div class="topbar-icon">🔔</div>
+  </div>
+  <div class="content">
+    <div class="eco-score-wrap">
+      <div class="eco-score-ring">
+        <svg viewBox="0 0 150 150"><circle class="ring-bg" cx="75" cy="75" r="65"/><circle class="ring-fill" id="ring-fill" cx="75" cy="75" r="65"/></svg>
+        <div class="eco-score-center">
+          <div class="eco-score-num" id="i-score-num">0</div>
+          <div class="eco-score-denom">/ 1000</div>
+        </div>
+      </div>
+      <div class="eco-level-name" id="i-level-name">Newcomer 🌱</div>
+      <div class="eco-level-desc">Log more waste to unlock higher levels!</div>
+    </div>
+    <div class="impact-stat">
+      <div class="impact-stat-icon" style="background:rgba(30,132,73,.2)">🌿</div>
+      <div><div class="impact-stat-val" id="i-waste">0 kg</div><div class="impact-stat-label">Waste Reduced</div></div>
+    </div>
+    <div class="impact-stat">
+      <div class="impact-stat-icon" style="background:rgba(52,152,219,.15)">☁️</div>
+      <div><div class="impact-stat-val" id="i-co2">0 kg</div><div class="impact-stat-label">CO₂ Saved (est.)</div></div>
+    </div>
+    <div class="impact-stat">
+      <div class="impact-stat-icon" style="background:rgba(231,76,60,.12)">🎁</div>
+      <div><div class="impact-stat-val" id="i-donations">0 items</div><div class="impact-stat-label">Items Donated</div></div>
+    </div>
+    <div class="impact-stat">
+      <div class="impact-stat-icon" style="background:rgba(240,180,41,.12)">⭐</div>
+      <div><div class="impact-stat-val" id="i-pts">0</div><div class="impact-stat-label">Total Points Earned</div></div>
+    </div>
+    <div class="section-title">Level progression</div>
+    <div class="card" style="padding:14px 16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px;width:28px">🌱</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Newcomer</div>
+            <div style="font-size:11px;color:var(--muted)">0 pts</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px;width:28px">🌿</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Eco Starter</div>
+            <div style="font-size:11px;color:var(--muted)">100 pts</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px;width:28px">🍀</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Green Hero</div>
+            <div style="font-size:11px;color:var(--muted)">500 pts</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px;width:28px">🏆</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Eco Champion</div>
+            <div style="font-size:11px;color:var(--muted)">1000 pts</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section-title">Your waste log</div>
+    <div id="impact-list"></div>
+  </div>
+  <div class="bottomnav" id="bn-impact"></div>
+</div>
+
+<!-- ===== REWARDS ===== -->
+<div id="s-rewards" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="go('home','back')">‹</div>
+    <div class="topbar-title">Rewards</div>
+    <div class="topbar-icon" id="rewards-pts-badge" style="font-size:12px;font-weight:700;color:var(--gold);background:rgba(240,180,41,.1);border-color:rgba(240,180,41,.3)">0 pts</div>
+  </div>
+  <div class="content">
+    <div id="rewards-toast" class="toast"></div>
+    <div class="reward-tabs">
+      <button class="reward-tab active" onclick="switchRewardTab('available',this)">Available Rewards</button>
+      <button class="reward-tab" onclick="switchRewardTab('redeemed',this)">My Rewards</button>
+    </div>
+    <div id="rewards-available">
+      <div class="reward-card">
+        <div class="reward-icon" style="background:rgba(46,204,113,.15)">🍽️</div>
+        <div class="reward-info"><h4>Canteen Discount</h4><p>10% off at campus canteen</p><div class="reward-pts">200 pts</div></div>
+        <button class="redeem-btn" onclick="redeemReward('Canteen Discount',200)">Redeem</button>
+      </div>
+      <div class="reward-card">
+        <div class="reward-icon" style="background:rgba(52,152,219,.12)">📚</div>
+        <div class="reward-info"><h4>Library Access Pass</h4><p>Extended borrowing privileges</p><div class="reward-pts">300 pts</div></div>
+        <button class="redeem-btn" onclick="redeemReward('Library Access Pass',300)">Redeem</button>
+      </div>
+      <div class="reward-card">
+        <div class="reward-icon" style="background:rgba(155,89,182,.12)">🚌</div>
+        <div class="reward-info"><h4>Shuttle Pass</h4><p>Free campus shuttle for a week</p><div class="reward-pts">400 pts</div></div>
+        <button class="redeem-btn" onclick="redeemReward('Shuttle Pass',400)">Redeem</button>
+      </div>
+      <div class="reward-card">
+        <div class="reward-icon" style="background:rgba(231,76,60,.1)">☕</div>
+        <div class="reward-info"><h4>Free Coffee Voucher</h4><p>One free beverage at campus café</p><div class="reward-pts">150 pts</div></div>
+        <button class="redeem-btn" onclick="redeemReward('Free Coffee',150)">Redeem</button>
+      </div>
+      <div class="reward-card">
+        <div class="reward-icon" style="background:rgba(240,180,41,.12)">🎽</div>
+        <div class="reward-info"><h4>Eco T-Shirt</h4><p>EcoTrack branded sustainable tee</p><div class="reward-pts">600 pts</div></div>
+        <button class="redeem-btn" onclick="redeemReward('Eco T-Shirt',600)">Redeem</button>
+      </div>
+    </div>
+    <div id="rewards-redeemed" style="display:none">
+      <div id="redeemed-list"></div>
+    </div>
+  </div>
+  <div class="bottomnav" id="bn-rewards"></div>
+</div>
+
+<!-- ===== LEADERBOARD ===== -->
+<div id="s-leaderboard" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="go('home','back')">‹</div>
+    <div class="topbar-title">Leaderboard</div>
+    <div class="topbar-icon">🏆</div>
+  </div>
+  <div class="content">
+    <div class="lb-tabs">
+      <button class="lb-tab active" onclick="switchLbTab('campus',this)">Campus</button>
+      <button class="lb-tab" onclick="switchLbTab('friends',this)">Friends</button>
+      <button class="lb-tab" onclick="switchLbTab('dept',this)">Department</button>
+    </div>
+    <div id="lb-list"></div>
+  </div>
+  <div class="bottomnav" id="bn-leaderboard"></div>
+</div>
+
+<!-- ===== QR SCANNER ===== -->
+<div id="s-scan" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="go('home','back')">‹</div>
+    <div class="topbar-title">Scan QR Code</div>
+    <div class="topbar-icon">🔔</div>
+  </div>
+  <div class="content" style="text-align:center">
+    <div class="coming-soon-badge">Future Feature</div>
+    <div class="qr-frame">
+      <div class="qr-corner tl"></div><div class="qr-corner tr"></div>
+      <div class="qr-corner bl"></div><div class="qr-corner br"></div>
+      <div class="qr-scan-line"></div>
+      <div class="qr-icon">📦</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6">Scan product or recycle bin QR codes<br>to verify eco actions and earn bonus points!</p>
+    <div class="qr-examples">
+      <div class="qr-ex-card" onclick="simulateQR('Recycle Bin')">
+        <div class="qr-ex-icon">🗑️</div>
+        <div class="qr-ex-title">Recycle Bin</div>
+        <div class="qr-ex-sub">+30 points</div>
+      </div>
+      <div class="qr-ex-card" onclick="simulateQR('Eco Product')">
+        <div class="qr-ex-icon">🧴</div>
+        <div class="qr-ex-title">Eco Product</div>
+        <div class="qr-ex-sub">+20 points</div>
+      </div>
+      <div class="qr-ex-card" onclick="simulateQR('Compost Bin')">
+        <div class="qr-ex-icon">🌱</div>
+        <div class="qr-ex-title">Compost Bin</div>
+        <div class="qr-ex-sub">+25 points</div>
+      </div>
+      <div class="qr-ex-card" onclick="simulateQR('Solar Station')">
+        <div class="qr-ex-icon">☀️</div>
+        <div class="qr-ex-title">Solar Station</div>
+        <div class="qr-ex-sub">+15 points</div>
+      </div>
+    </div>
+    <div id="qr-toast" class="toast" style="margin-top:14px;text-align:left"></div>
+  </div>
+  <div class="bottomnav" id="bn-scan"></div>
+</div>
+
+<!-- ===== CONTACT ===== -->
+<div id="s-contact" class="screen">
+  <div class="topbar">
+    <div class="topbar-back" onclick="go('home','back')">‹</div>
+    <div class="topbar-title">Contact</div>
+    <div class="topbar-icon">🌿</div>
+  </div>
+  <div class="content">
+    <div class="contact-hero">
+      <div class="contact-avatar">👨‍💻</div>
+      <div class="contact-name">Lalitheswar Reddy</div>
+      <div class="contact-role">EcoTrack Developer · SDG 12 Advocate</div>
+    </div>
+    <div class="contact-links">
+      <a class="contact-link" href="mailto:lalitheswarreddy55555@gmail.com">
+        <div class="contact-link-icon" style="background:rgba(231,76,60,.15)">📧</div>
+        <div><div class="contact-link-label">Email</div><div class="contact-link-val">lalitheswarreddy55555@gmail.com</div></div>
+        <div class="contact-arrow">›</div>
+      </a>
+      <a class="contact-link" href="tel:+918074794654">
+        <div class="contact-link-icon" style="background:rgba(46,204,113,.12)">📱</div>
+        <div><div class="contact-link-label">Mobile</div><div class="contact-link-val">+91 8074794654</div></div>
+        <div class="contact-arrow">›</div>
+      </a>
+      <a class="contact-link" href="https://instagram.com/lalitheswar_reddy" target="_blank">
+        <div class="contact-link-icon" style="background:rgba(183,0,182,.12)">📸</div>
+        <div><div class="contact-link-label">Instagram</div><div class="contact-link-val">@lalitheswar_reddy</div></div>
+        <div class="contact-arrow">›</div>
+      </a>
+    </div>
+    <div class="sdg-banner">
+      <div class="sdg-banner-icon">🌍</div>
+      <div class="sdg-banner-title">UN SDG 12 — Responsible Consumption & Production</div>
+      <div class="sdg-banner-desc">EcoTrack promotes sustainable habits by tracking waste, rewarding responsible actions, and building a greener campus community. Together we can achieve Target 12.5 — reduce waste through prevention, reduction, recycling, and reuse.</div>
+    </div>
+  </div>
+  <div class="bottomnav" id="bn-contact"></div>
+</div>
+
+</div><!-- end .app -->
+
+<script>
+// ---- DATA ----
+var TIPS=["Plan meals for the week to avoid buying food you won't eat.","Carry a reusable bottle — skip single-use plastic ones every day.","Compost fruit and vegetable scraps instead of throwing them away.","Buy in bulk to cut down on packaging waste per item.","Use beeswax wraps instead of cling film to store leftovers.","Shop at local markets to reduce packaging and food miles.","Bring a cloth bag every time — it saves 4 to 6 plastic bags per trip."];
+document.getElementById('home-tip').textContent = TIPS[new Date().getDay() % TIPS.length];
+
+var PRODUCTS = [
+  {icon:'🍶',name:'Reusable Bottle',price:499,tag:'Saves ~500 plastic bottles/yr'},
+  {icon:'🛍️',name:'Cloth Bag',price:199,tag:'Eliminates 4–6 plastic bags/trip'},
+  {icon:'🪥',name:'Bamboo Toothbrush',price:149,tag:'100% biodegradable handle'},
+  {icon:'🧴',name:'Shampoo Bar',price:249,tag:'Zero plastic packaging'},
+  {icon:'🥡',name:'Steel Tiffin Box',price:349,tag:'Ditch single-use containers'},
+  {icon:'🕯️',name:'Soy Wax Candle',price:299,tag:'Non-toxic & recyclable jar'},
+  {icon:'🧴',name:'Bamboo Soap Dish',price:129,tag:'Biodegradable, lasts years'},
+];
+
+var LB_DATA = {
+  campus:[
+    {name:'Aarav',pts:1200,dept:'CSE',you:false},
+    {name:'You',pts:0,dept:'Your dept',you:true},
+    {name:'Priya',pts:780,dept:'ECE',you:false},
+    {name:'Rahul',pts:650,dept:'MBA',you:false},
+    {name:'Sneha',pts:580,dept:'CSE',you:false},
+    {name:'Dev',pts:430,dept:'ME',you:false},
+  ],
+  friends:[
+    {name:'You',pts:0,dept:'Your dept',you:true},
+    {name:'Kiran',pts:320,dept:'Friend',you:false},
+    {name:'Meera',pts:210,dept:'Friend',you:false},
+    {name:'Arjun',pts:190,dept:'Friend',you:false},
+  ],
+  dept:[
+    {name:'Aarav',pts:1200,dept:'CSE',you:false},
+    {name:'Sneha',pts:580,dept:'CSE',you:false},
+    {name:'You',pts:0,dept:'Your dept',you:true},
+    {name:'Raj',pts:210,dept:'CSE',you:false},
+  ]
+};
+
+var currentLbTab = 'campus';
+
+// ---- STORAGE ----
+function getWaste(){try{return JSON.parse(localStorage.getItem('et_waste')||'[]')}catch{return[]}}
+function getDonations(){try{return JSON.parse(localStorage.getItem('et_donations')||'[]')}catch{return[]}}
+function getRedeemed(){try{return JSON.parse(localStorage.getItem('et_redeemed')||'[]')}catch{return[]}}
+function getTotalPts(){return getWaste().reduce(function(s,e){return s+e.pts},0)}
+
+// ---- NAVIGATION ----
+var currentScreen = 'home';
+function go(page, dir){
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.remove('active','back-anim');
+    s.style.display='none';
+  });
+  var sc = document.getElementById('s-'+page);
+  sc.style.display='flex';
+  if(dir==='back') sc.classList.add('back-anim');
+  sc.classList.add('active');
+  currentScreen = page;
+  if(page==='tracker') renderWaste();
+  if(page==='donate') renderDonate();
+  if(page==='impact') renderImpact();
+  if(page==='home') updateHome();
+  if(page==='rewards') updateRewards();
+  if(page==='leaderboard') renderLeaderboard(currentLbTab);
+  if(page==='shop') renderShop();
+  window.scrollTo(0,0);
+}
+
+// ---- BOTTOM NAV ----
+var NAV_ITEMS = [
+  {id:'home',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>',label:'Home'},
+  {id:'shop',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>',label:'Shop'},
+  {id:'scan',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="21" y1="16" x2="21" y2="21"/><line x1="16" y1="21" x2="21" y2="21"/></svg>',label:'Scan'},
+  {id:'rewards',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',label:'Rewards'},
+  {id:'leaderboard',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',label:'Board'},
+];
+['home','tracker','shop','donate','impact','rewards','leaderboard','scan','contact'].forEach(function(id){
+  var el = document.getElementById('bn-'+id);
+  if(!el) return;
+  el.innerHTML = NAV_ITEMS.map(function(n){
+    return '<button class="bnav-btn'+(n.id===id?' active':'')+'" onclick="go(\''+n.id+'\')">'+n.icon+'<span>'+n.label+'</span></button>';
+  }).join('');
+});
+
+// ---- WASTE TRACKER ----
+document.getElementById('w-qty').addEventListener('input', function(){
+  var qty = parseFloat(this.value)||0;
+  var preview = document.getElementById('pts-preview');
+  if(qty>0){
+    preview.style.display='block';
+    preview.textContent = '🌟 You will earn ' + Math.round(qty*20) + ' points for this entry!';
+  } else {
+    preview.style.display='none';
+  }
+});
+
+function saveWaste(){
+  var item = document.getElementById('w-item').value.trim();
+  var qty = parseFloat(document.getElementById('w-qty').value)||0;
+  var reason = document.getElementById('w-reason').value;
+  if(!item||qty<=0){alert('Please enter item name and a quantity greater than 0.');return;}
+  var pts = Math.round(qty*20);
+  var arr = getWaste();
+  arr.unshift({id:Date.now(),item:item,qty:qty,reason:reason,pts:pts,date:new Date().toLocaleString()});
+  localStorage.setItem('et_waste',JSON.stringify(arr));
+  document.getElementById('w-item').value='';
+  document.getElementById('w-qty').value='';
+  document.getElementById('w-reason').value='';
+  document.getElementById('pts-preview').style.display='none';
+  showToast('tracker-toast','✅ Saved! You earned +'+pts+' points.');
+  renderWaste();
+  updateHome();
+}
+
+function renderWaste(){
+  var arr = getWaste();
+  var el = document.getElementById('waste-list');
+  if(!arr.length){el.innerHTML='<div class="empty"><div class="empty-icon">♻️</div><div class="empty-text">No entries yet. Start logging!</div></div>';return;}
+  el.innerHTML = arr.map(function(e,i){
+    return '<div class="entry-card" style="animation-delay:'+i*.05+'s"><div><div class="entry-info-title">'+e.item+' — '+e.qty+' kg</div><div class="entry-info-meta">'+(e.reason||'No reason')+'  ·  '+e.date+'</div></div><span class="pts-pill">+'+e.pts+' pts</span></div>';
+  }).join('');
+}
+
+// ---- SHOP ----
+function renderShop(filter){
+  var items = filter ? PRODUCTS.filter(function(p){return p.name.toLowerCase().includes(filter.toLowerCase())}) : PRODUCTS;
+  var el = document.getElementById('shop-list');
+  el.innerHTML = items.map(function(p){
+    return '<div class="product-card"><div class="product-icon">'+p.icon+'</div><div class="product-info"><h4>'+p.name+'</h4><div class="product-price">₹'+p.price+'</div><div class="product-tag">'+p.tag+'</div></div><button class="buy-btn" onclick="buyItem(\''+p.name+'\','+p.price+')">Buy Now</button></div>';
+  }).join('');
+}
+function filterShop(){renderShop(document.getElementById('shop-search').value)}
+function buyItem(name,price){
+  var t = document.getElementById('shop-toast');
+  t.style.display='block';
+  t.textContent='🛒 Added '+name+' (₹'+price+') to wishlist! Visit a local eco store.';
+  setTimeout(function(){t.style.display='none'},3500);
+}
+
+// ---- DONATE ----
+function postDonation(){
+  var name = document.getElementById('d-name').value.trim();
+  var cond = document.getElementById('d-condition').value;
+  var desc = document.getElementById('d-desc').value.trim();
+  if(!name){alert('Please enter the item name.');return;}
+  var arr = getDonations();
+  arr.unshift({id:Date.now(),name:name,cond:cond,desc:desc,date:new Date().toLocaleString()});
+  localStorage.setItem('et_donations',JSON.stringify(arr));
+  document.getElementById('d-name').value='';
+  document.getElementById('d-desc').value='';
+  showToast('donate-toast','🎁 Donation posted! Thank you for reducing waste.');
+  renderDonate();
+  updateHome();
+}
+function renderDonate(){
+  var arr = getDonations();
+  var el = document.getElementById('donate-list');
+  if(!arr.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎁</div><div class="empty-text">No donations yet.</div></div>';return;}
+  el.innerHTML = arr.map(function(e,i){
+    var cc = e.cond==='Good'?'cond-good':e.cond==='Fair'?'cond-fair':'cond-poor';
+    return '<div class="donate-card" style="animation-delay:'+i*.05+'s"><h4>'+e.name+'</h4><p>'+(e.desc||'No description')+' · '+e.date+'</p><span class="cond-badge '+cc+'">'+e.cond+'</span></div>';
+  }).join('');
+}
+
+// ---- IMPACT ----
+function renderImpact(){
+  var waste = getWaste();
+  var donations = getDonations();
+  var totalKg = waste.reduce(function(s,e){return s+e.qty},0);
+  var totalPts = waste.reduce(function(s,e){return s+e.pts},0);
+  var co2 = (totalKg*2.5).toFixed(1);
+  var score = Math.min(1000, totalPts);
+  var level = getLevel(score);
+  document.getElementById('i-waste').textContent = totalKg.toFixed(1)+' kg';
+  document.getElementById('i-co2').textContent = co2+' kg';
+  document.getElementById('i-donations').textContent = donations.length+' items';
+  document.getElementById('i-pts').textContent = totalPts+' pts';
+  document.getElementById('i-score-num').textContent = score;
+  document.getElementById('i-level-name').textContent = level.name;
+  // ring animation
+  var pct = score/1000;
+  var circ = 408;
+  document.getElementById('ring-fill').style.strokeDashoffset = circ - (circ * pct);
+  // impact list
+  var el = document.getElementById('impact-list');
+  if(!waste.length){el.innerHTML='<div class="empty"><div class="empty-icon">🌿</div><div class="empty-text">No waste tracked yet.</div></div>';return;}
+  el.innerHTML = waste.slice(0,10).map(function(e,i){
+    return '<div class="entry-card" style="animation-delay:'+i*.04+'s"><div><div class="entry-info-title">'+e.item+' — '+e.qty+' kg</div><div class="entry-info-meta">'+e.date+'</div></div><span class="pts-pill">+'+e.pts+' pts</span></div>';
+  }).join('');
+}
+
+// ---- HOME UPDATE ----
+function updateHome(){
+  var waste = getWaste();
+  var donations = getDonations();
+  var totalKg = waste.reduce(function(s,e){return s+e.qty},0);
+  var totalPts = waste.reduce(function(s,e){return s+e.pts},0);
+  var co2 = (totalKg*2.5).toFixed(1);
+  var level = getLevel(Math.min(1000,totalPts));
+  document.getElementById('h-score').innerHTML = totalPts+' <span>pts</span>';
+  document.getElementById('h-waste').textContent = totalKg.toFixed(1);
+  document.getElementById('h-co2').textContent = co2;
+  document.getElementById('h-donated').textContent = donations.length;
+  document.getElementById('h-level-name').textContent = level.name;
+  document.getElementById('h-level-icon').textContent = level.icon;
+  var pct = Math.min(100, Math.round((totalPts / level.nextPts)*100));
+  document.getElementById('h-progress').style.width = pct+'%';
+  document.getElementById('h-progress-label').textContent = pct+'%';
+}
+
+// ---- REWARDS ----
+function updateRewards(){
+  var pts = getTotalPts();
+  document.getElementById('rewards-pts-badge').textContent = pts+' pts';
+}
+function switchRewardTab(tab, btn){
+  document.querySelectorAll('.reward-tab').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  document.getElementById('rewards-available').style.display = tab==='available'?'block':'none';
+  document.getElementById('rewards-redeemed').style.display = tab==='redeemed'?'block':'none';
+  if(tab==='redeemed') renderRedeemed();
+}
+function renderRedeemed(){
+  var arr = getRedeemed();
+  var el = document.getElementById('redeemed-list');
+  if(!arr.length){el.innerHTML='<div class="empty"><div class="empty-icon">⭐</div><div class="empty-text">No rewards redeemed yet.<br>Earn points to unlock!</div></div>';return;}
+  el.innerHTML = arr.map(function(r){
+    return '<div class="reward-card"><div class="reward-icon" style="background:rgba(46,204,113,.1)">✅</div><div class="reward-info"><h4>'+r.name+'</h4><p>Redeemed · '+r.date+'</p><div class="reward-pts" style="color:var(--g5)">–'+r.pts+' pts</div></div></div>';
+  }).join('');
+}
+function redeemReward(name, cost){
+  var pts = getTotalPts();
+  var redeemed = getRedeemed();
+  var spent = redeemed.reduce(function(s,r){return s+r.pts},0);
+  var available = pts - spent;
+  if(available < cost){
+    showToast('rewards-toast','❌ Not enough points! You need '+cost+' pts but have '+available+' available.');
+    return;
+  }
+  redeemed.unshift({name:name,pts:cost,date:new Date().toLocaleString()});
+  localStorage.setItem('et_redeemed',JSON.stringify(redeemed));
+  showToast('rewards-toast','🎉 "'+name+'" redeemed successfully!');
+  updateRewards();
+}
+
+// ---- LEADERBOARD ----
+function switchLbTab(tab, btn){
+  currentLbTab = tab;
+  document.querySelectorAll('.lb-tab').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  renderLeaderboard(tab);
+}
+function renderLeaderboard(tab){
+  var pts = getTotalPts();
+  var data = JSON.parse(JSON.stringify(LB_DATA[tab]));
+  data.forEach(function(d){if(d.you) d.pts = pts});
+  data.sort(function(a,b){return b.pts-a.pts});
+  var rankClasses = ['gold','silver','bronze'];
+  var el = document.getElementById('lb-list');
+  el.innerHTML = data.map(function(d,i){
+    var rc = i<3?rankClasses[i]:'other';
+    var rankIcon = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    var initials = d.name === 'You' ? 'ME' : d.name.substring(0,2).toUpperCase();
+    return '<div class="lb-entry'+(d.you?' me':'')+'" style="animation-delay:'+i*.08+'s"><div class="lb-rank '+rc+'">'+rankIcon+'</div><div class="lb-avatar">'+initials+'</div><div><div class="lb-name">'+(d.you?'You (Me)':d.name)+'</div><div class="lb-sub">'+d.dept+'</div></div><div class="lb-pts">'+d.pts+' pts</div></div>';
+  }).join('');
+}
+
+// ---- QR ----
+function simulateQR(type){
+  var points = {Recycling:30,'Eco Product':20,'Compost Bin':25,'Solar Station':15};
+  var pts = 20;
+  var arr = getWaste();
+  arr.unshift({id:Date.now(),item:'QR: '+type,qty:0.1,reason:'QR Verified',pts:pts,date:new Date().toLocaleString()});
+  localStorage.setItem('et_waste',JSON.stringify(arr));
+  var t = document.getElementById('qr-toast');
+  t.style.display='block';
+  t.textContent = '✅ QR scanned! You earned +'+pts+' points for verifying '+type+'.';
+  setTimeout(function(){t.style.display='none'},3000);
+  updateHome();
+}
+
+// ---- UTILS ----
+function getLevel(pts){
+  if(pts>=1000) return {name:'Eco Champion 🏆',icon:'🏆',nextPts:1000};
+  if(pts>=500) return {name:'Green Hero 🍀',icon:'🍀',nextPts:1000};
+  if(pts>=100) return {name:'Eco Starter 🌿',icon:'🌿',nextPts:500};
+  return {name:'Newcomer 🌱',icon:'🌱',nextPts:100};
+}
+function showToast(id, msg){
+  var t = document.getElementById(id);
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(function(){t.style.display='none'},3000);
+}
+
+// ---- PARTICLES ----
+(function(){
+  var container = document.getElementById('particles');
+  for(var i=0;i<18;i++){
+    var p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random()*100+'%';
+    p.style.animationDuration = (8+Math.random()*12)+'s';
+    p.style.animationDelay = (Math.random()*10)+'s';
+    p.style.width = p.style.height = (2+Math.random()*3)+'px';
+    p.style.opacity = (0.2+Math.random()*0.5)+'';
+    container.appendChild(p);
+  }
+})();
+
+// ---- INIT ----
+renderShop();
+updateHome();
+</script>
+</body>
+</html>
